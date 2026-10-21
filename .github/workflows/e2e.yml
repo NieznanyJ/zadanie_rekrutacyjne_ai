@@ -1,0 +1,38 @@
+name: E2E tests
+on:
+  workflow_dispatch:
+
+# One run at a time: parallel runs would double logins to the shared account
+# and wrong-password attempts on the own account (lockout risk).
+concurrency:
+  group: e2e
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run Playwright tests
+        run: npx playwright test
+        env:
+          SHARED_USER: ${{ secrets.SHARED_USER }}
+          SHARED_PASSWORD: ${{ secrets.SHARED_PASSWORD }}
+          OWN_USER: ${{ secrets.OWN_USER }}
+          OWN_PASSWORD: ${{ secrets.OWN_PASSWORD }}
+          NR_PESEL: ${{ secrets.NR_PESEL }}
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
