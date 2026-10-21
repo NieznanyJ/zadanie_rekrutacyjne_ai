@@ -1,30 +1,35 @@
 import fs from 'node:fs';
 import { test as base, expect, type Page } from '@playwright/test';
 import { accounts } from './env';
-import { SHARED_LOGIN_FAILED_MARKER } from './auth-paths';
+import { loginFailedMarker } from './auth-paths';
 import { CookieBanner } from './pages/CookieBanner';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { PrescriptionConsultationPage } from './pages/PrescriptionConsultationPage';
+import { RemoteConsultationPage } from './pages/RemoteConsultationPage';
+
+type Account = 'shared' | 'own';
 
 type TestOptions = {
-  loginAs: 'shared' | null;
+  loginAs: Account | null;
 };
 
 type TestFixtures = {
   loginPage: LoginPage;
   homePage: HomePage;
   prescriptionPage: PrescriptionConsultationPage;
+  remoteConsultationPage: RemoteConsultationPage;
 };
 
 export const test = base.extend<TestOptions & TestFixtures>({
-  // Tests start logged in to the shared account; login tests opt out with test.use({ loginAs: null }).
+  // Tests start logged in to the shared account; login tests opt out with test.use({ loginAs: null }),
+  // tests on the candidate's own account use test.use({ loginAs: 'own' }).
   loginAs: ['shared', { option: true }],
 
   page: async ({ page, loginAs }, use) => {
     await new CookieBanner(page).acceptWhenShown();
-    if (loginAs === 'shared') {
-      await loginAsSharedUser(page);
+    if (loginAs) {
+      await logIn(page, loginAs);
     }
     await use(page);
   },
@@ -40,21 +45,40 @@ export const test = base.extend<TestOptions & TestFixtures>({
   prescriptionPage: async ({ page }, use) => {
     await use(new PrescriptionConsultationPage(page));
   },
+
+  remoteConsultationPage: async ({ page }, use) => {
+    await use(new RemoteConsultationPage(page));
+  },
 });
 
-async function loginAsSharedUser(page: Page) {
-  if (fs.existsSync(SHARED_LOGIN_FAILED_MARKER)) {
-    throw new Error('Shared account login already failed in this run – not retrying (lockout risk)');
+async function logIn(page: Page, account: Account) {
+  const marker = loginFailedMarker(account);
+  if (fs.existsSync(marker)) {
+    throw new Error(`Login to the ${account} account already failed in this run – not retrying (lockout risk)`);
   }
 
+  const { user, password } = accounts[account];
   const loginPage = new LoginPage(page);
   const homePage = new HomePage(page);
   await loginPage.goto();
-  await loginPage.login(accounts.shared.user, accounts.shared.password);
-  await expect(homePage.mainMenu.or(loginPage.invalidCredentialsError).or(loginPage.lockoutError)).toBeVisible();
-  if (!(await homePage.mainMenu.isVisible())) {
-    fs.writeFileSync(SHARED_LOGIN_FAILED_MARKER, '');
-    throw new Error('Shared account login failed – check SHARED_USER / SHARED_PASSWORD in .env');
+  await loginPage.login(user, password);
+  // The lockout message can be shown together with the account picker (it may concern the other account
+  // linked to the same email), so wait for any outcome instead of exactly one element.
+  await expect(
+    homePage.mainMenu
+      .or(loginPage.chooseAccountDialog)
+      .or(loginPage.invalidCredentialsError)
+      .or(loginPage.lockoutError),
+  ).not.toHaveCount(0);
+  if (await loginPage.chooseAccountDialog.isVisible()) {
+    // The own account's email is linked to more than one account
+    await loginPage.chooseAccountByPesel(accounts.own.pesel);
+  } else if (await loginPage.lockoutError.isVisible()) {
+    fs.writeFileSync(marker, '');
+    throw new Error(`The ${account} account is temporarily locked (too many failed logins) – try again in 5 minutes`);
+  } else if (!(await homePage.mainMenu.isVisible())) {
+    fs.writeFileSync(marker, '');
+    throw new Error(`Login to the ${account} account failed – check its credentials in .env`);
   }
   // The main menu is rendered while the session is still loading; the booking button gets enabled only
   // once it is ready. Navigating away earlier leaves the app stuck on a loading spinner.

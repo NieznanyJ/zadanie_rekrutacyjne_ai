@@ -125,3 +125,21 @@ test.describe('prescription consultation', () => {
       );
   });
 });
+
+test.describe('remote consultation (own account)', () => {
+  test.use({ loginAs: 'own' });
+
+  // Known bug BUG-01: the specializations API (validate=true) returns an empty list for this account,
+  // so the user cannot pick any specialization. Expected to fail until the bug is fixed.
+  test('shows available online specializations (BUG-01)', { tag: '@known-bug' }, async ({ remoteConsultationPage }) => {
+    const specializationsResponse = remoteConsultationPage.waitForSpecializations();
+    await remoteConsultationPage.goto();
+
+    const body: { total: number } = await (await specializationsResponse).json();
+    expect.soft(body.total).toBeGreaterThan(0);
+
+    await remoteConsultationPage.openSpecializationList();
+    await expect(remoteConsultationPage.noResultsMessage).toBeHidden();
+    await expect(remoteConsultationPage.specializationOptions).not.toHaveCount(0);
+  });
+});
