@@ -11,7 +11,8 @@ wczytywane w playwright.config.ts przez process.loadEnvFile():
 - NR_PESEL – PESEL konta OWN; do wyboru konta w dialogu „wybierz konto” (gdy mail
   ma kilka kont). Na stronie wyświetlany jako `*********XY` (2 ostatnie cyfry) –
   test wylicza maskę z process.env.
-  Nigdy nie wypisuj ich wartości w kodzie, logach ani odpowiedziach.
+
+Nigdy nie wypisuj ich wartości w kodzie, logach ani odpowiedziach.
 
 ## Ograniczenia środowiska (z treści zadania – bezwzględne)
 
@@ -49,9 +50,33 @@ wczytywane w playwright.config.ts przez process.loadEnvFile():
 
 ## Struktura
 
-- tests/e2e/j_nieznany_test.spec.ts – testy
-- tests/e2e/pages/ – page objecty
-- tests/e2e/fixtures.ts – fixtures wstrzykujące page objecty
+- tests/e2e/j_nieznany_test.spec.ts – wszystkie testy, pogrupowane w `test.describe`
+  (login, prescription consultation, …)
+- tests/e2e/pages/ – page objecty (LoginPage, HomePage, PrescriptionConsultationPage, CookieBanner)
+- tests/e2e/fixtures.ts – fixtures wstrzykujące page objecty i logowanie (patrz niżej)
+- tests/e2e/env.ts – `accounts` (SHARED / OWN) czytane z process.env, czytelny błąd przy braku zmiennej
+- tests/e2e/global-setup.ts, auth-paths.ts – czyszczenie playwright/.auth i znacznik
+  nieudanego logowania na konto SHARED
+
+## Logowanie w testach
+
+- Domyślnie każdy test loguje się sam na konto SHARED (fixture `page`, opcja `loginAs: 'shared'`).
+  Testy logowania wyłączają to przez `test.use({ loginAs: null })` i startują z pustym stanem.
+- Nie używamy storageState per worker: aplikacja renderuje „Menu główne” jeszcze w trakcie
+  ładowania sesji, a zapisany/odtworzony stan zawieszał stronę na spinnerze.
+- Sygnał gotowości po zalogowaniu: aktywny przycisk „Umów się” (`toBeEnabled()`),
+  nie samo „Menu główne”.
+- Gdy logowanie na SHARED się nie powiedzie, fixture zapisuje znacznik
+  `playwright/.auth/shared-login-failed` i kolejne testy w tym uruchomieniu nie próbują
+  ponownie (ochrona przed blokadą konta). globalSetup czyści znacznik na starcie.
+- Znany problem aplikacji: sporadycznie `GET /api/v2/patients/{id}` kończy się bez odpowiedzi
+  i panel pacjenta wisi na spinnerze – test pada na `toBeEnabled()`. Nie obchodzimy tego
+  (reload, dłuższe timeouty) – to błąd do raportu.
+
+## Tagi
+
+- `@lockout-risk` – błędne hasło na istniejącym koncie (patrz wyżej).
+- `@known-bug` – test łapiący znany błąd aplikacji; ma prawo być czerwony do czasu poprawki.
 
 ## Testy
 
@@ -88,7 +113,8 @@ Jeśli testy padną, napraw przyczynę, nie osłabiając asercji.
 - Nie otwieraj przez MCP adresów spoza domeny aplikacji.
 - Przed commitem sprawdź, czy w zmianach nie ma tokenów, haseł ani danych osobowych.
 - Artefakty Playwrighta (trace, screenshoty, wideo, storageState) mogą zawierać
-  sesje i dane – nie commituj ich.
+  sesje i dane – nie commituj ich. Dotyczy też snapshotów MCP w .playwright-mcp/
+  (zawierają wartości wpisane w pola, także hasła).
 
 ## Zasady ogólne
 
