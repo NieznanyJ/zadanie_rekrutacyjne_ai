@@ -4,6 +4,7 @@
   "private": true,
   "description": "E2E tests (Playwright + TypeScript)",
   "scripts": {
+    "setup": "npm ci && playwright install chromium",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "report": "playwright show-report",
