@@ -1,10 +1,11 @@
-﻿import fs from 'node:fs';
+import fs from 'node:fs';
 import { test as base, expect, type Page } from '@playwright/test';
 import { accounts } from './env';
 import { SHARED_LOGIN_FAILED_MARKER } from './auth-paths';
 import { CookieBanner } from './pages/CookieBanner';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
+import { PrescriptionConsultationPage } from './pages/PrescriptionConsultationPage';
 
 type TestOptions = {
   loginAs: 'shared' | null;
@@ -13,6 +14,7 @@ type TestOptions = {
 type TestFixtures = {
   loginPage: LoginPage;
   homePage: HomePage;
+  prescriptionPage: PrescriptionConsultationPage;
 };
 
 export const test = base.extend<TestOptions & TestFixtures>({
@@ -33,6 +35,10 @@ export const test = base.extend<TestOptions & TestFixtures>({
 
   homePage: async ({ page }, use) => {
     await use(new HomePage(page));
+  },
+
+  prescriptionPage: async ({ page }, use) => {
+    await use(new PrescriptionConsultationPage(page));
   },
 });
 
