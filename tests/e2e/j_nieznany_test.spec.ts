@@ -2,6 +2,27 @@ import { randomUUID } from 'node:crypto';
 import { test, expect } from './fixtures';
 import { accounts } from './env';
 
+// Checks that the app is up at all; on CI every other test depends on these (see playwright.config.ts).
+test.describe('smoke', { tag: '@smoke' }, () => {
+  test.describe('logged out', () => {
+    test.use({ loginAs: null });
+
+    test('opens login page', async ({ loginPage }) => {
+      await loginPage.goto();
+
+      await expect(loginPage.identifierInput).toBeVisible();
+      await expect(loginPage.passwordInput).toBeVisible();
+      await expect(loginPage.submitButton).toBeEnabled();
+    });
+  });
+
+  test('loads patient panel after login', async ({ page, homePage }) => {
+    await expect(page).not.toHaveURL(/\/login/);
+    await expect(homePage.mainMenu).toBeVisible();
+    await expect(homePage.bookButton).toBeEnabled();
+  });
+});
+
 test.describe('login', () => {
   test.use({ loginAs: null });
 

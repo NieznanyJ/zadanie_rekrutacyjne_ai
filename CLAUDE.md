@@ -64,6 +64,9 @@ Nigdy nie wypisuj ich wartości w kodzie, logach ani odpowiedziach.
 
 ## Tagi
 
+- `@smoke` – czy aplikacja w ogóle działa (strona logowania, panel pacjenta po zalogowaniu).
+  Osobny projekt `smoke` w playwright.config.ts; na CI projekt `chromium` od niego zależy
+  (padnie smoke → reszta pominięta). Smoke nie może zawierać testów `@lockout-risk`.
 - `@lockout-risk` – błędne hasło na istniejącym koncie (patrz wyżej).
 - `@known-bug` – test łapiący znany błąd aplikacji; ma prawo być czerwony do czasu poprawki.
 
