@@ -30,7 +30,15 @@ export default defineConfig({
   },
   projects: [
     {
+      name: 'smoke',
+      grep: /@smoke/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
       name: 'chromium',
+      grepInvert: /@smoke/,
+      // On CI the rest of the suite runs only when the app is up (smoke passed); locally both run independently.
+      dependencies: process.env.CI ? ['smoke'] : [],
       use: { ...devices['Desktop Chrome'] },
     },
   ],

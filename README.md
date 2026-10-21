@@ -18,6 +18,7 @@ npm test               # raport: npm run report
 - `OWN_USER`, `OWN_PASSWORD`, `NR_PESEL` – własne konto (błędne hasło, wybór konta po PESEL, Wizyta zdalna).
 
 Na CI te same nazwy są czytane z GitHub Secrets (`.github/workflows/e2e.yml`, codziennie o 5:00 i ręcznie).
+Na CI najpierw lecą testy `@smoke` (czy aplikacja działa); gdy padną, reszta jest pomijana.
 
 ## Testy, które mają prawo failować
 
