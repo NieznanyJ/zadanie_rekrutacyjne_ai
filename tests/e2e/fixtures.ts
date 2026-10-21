@@ -1,4 +1,4 @@
-﻿import fs from 'node:fs';
+import fs from 'node:fs';
 import { test as base, expect, type Page } from '@playwright/test';
 import { accounts } from './env';
 import { loginFailedMarker } from './auth-paths';
@@ -6,6 +6,7 @@ import { CookieBanner } from './pages/CookieBanner';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { PrescriptionConsultationPage } from './pages/PrescriptionConsultationPage';
+import { RemoteConsultationPage } from './pages/RemoteConsultationPage';
 
 type Account = 'shared' | 'own';
 
@@ -17,6 +18,7 @@ type TestFixtures = {
   loginPage: LoginPage;
   homePage: HomePage;
   prescriptionPage: PrescriptionConsultationPage;
+  remoteConsultationPage: RemoteConsultationPage;
 };
 
 export const test = base.extend<TestOptions & TestFixtures>({
@@ -42,6 +44,10 @@ export const test = base.extend<TestOptions & TestFixtures>({
 
   prescriptionPage: async ({ page }, use) => {
     await use(new PrescriptionConsultationPage(page));
+  },
+
+  remoteConsultationPage: async ({ page }, use) => {
+    await use(new RemoteConsultationPage(page));
   },
 });
 
