@@ -1,10 +1,9 @@
-import { randomUUID } from 'node:crypto';
+﻿import { randomUUID } from 'node:crypto';
 import { test, expect } from './fixtures';
 import { accounts } from './env';
 
 test.describe('login', () => {
-  // Login tests always start logged out – no shared worker session.
-  test.use({ storageState: { cookies: [], origins: [] } });
+  test.use({ loginAs: null });
 
   test.beforeEach(async ({ loginPage }) => {
     await loginPage.goto();
