@@ -8,3 +8,5 @@ node_modules/
 /playwright/.auth/
 .env
 .claude/settings.local.json
+# Playwright MCP snapshots/logs – may contain form values (credentials)
+.playwright-mcp/
