@@ -45,8 +45,11 @@ Nigdy nie wypisuj ich wartości w kodzie, logach ani odpowiedziach.
 - Lint: `npm run lint` (ESLint + eslint-plugin-playwright), `npm run lint:fix`
 - Formatowanie: `npm run format` / `npm run format:check` (Prettier)
 - Typy: `npm run typecheck`
-- CI (.github/workflows/lint.yml): lint, format:check i typecheck na każdym pull_request;
-  testy e2e nie są uruchamiane na CI.
+- CI (.github/workflows/lint.yml): lint, format:check i typecheck na każdym pull_request.
+- CI (.github/workflows/e2e.yml): testy e2e tylko ręcznie (workflow_dispatch), jeden przebieg
+  naraz; dane logowania z GitHub Secrets (SHARED_USER, SHARED_PASSWORD, OWN_USER,
+  OWN_PASSWORD, NR_PESEL). Na CI trace jest wyłączony (zapisuje wartości z fill(), a raport
+  jest pobieralnym artefaktem) – w raporcie są tylko screenshoty z błędów.
 
 ## Struktura
 

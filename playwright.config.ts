@@ -21,10 +21,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* No retries: failed-login tests must never be repeated (shared account lockout). */
   retries: 0,
-  reporter: 'html',
+  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'html',
   use: {
     baseURL: BASE_URL,
-    trace: 'retain-on-failure',
+    // Traces record fill() values (passwords) and the CI report is a downloadable artifact – keep them local only.
+    trace: process.env.CI ? 'off' : 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
   projects: [
