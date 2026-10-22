@@ -1,12 +1,6 @@
 name: E2E tests
 on:
   workflow_dispatch:
-  schedule:
-    # Daily at 05:00 Polish time. Cron runs in UTC: 04:00 UTC = 05:00 CET (winter);
-    # in summer (CEST) this is 06:00 – change to '0 3 * * *' to keep 05:00.
-    - cron: '0 4 * * *'
-
-# One run at a time: parallel runs would double logins to the shared account
 # and wrong-password attempts on the own account (lockout risk).
 concurrency:
   group: e2e
